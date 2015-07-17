@@ -1,11 +1,11 @@
 class Puppet::Provider::Rbac_api < Puppet::Provider
-  require 'yaml'
   require 'net/https'
   require 'uri'
   require 'json'
   require 'openssl'
+  require 'yaml'
 
-  CONFIGFILE = '/etc/puppetlabs/console-auth/config.yml'
+  CONFIGFILE = "#{Puppet.settings[:confdir]}/classifier.yaml"
 
   confine :exists => CONFIGFILE
 
@@ -15,17 +15,24 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
   def self.build_auth(uri)
     https = Net::HTTP.new(uri.host, uri.port)
     https.use_ssl = true
-    https.ca_file = CONF['ca_cert_file']
-    https.key = OpenSSL::PKey::RSA.new(File.read(CONF['host_private_key_file']))
-    https.cert = OpenSSL::X509::Certificate.new(File.read(CONF['host_cert_file']))
+    https.ssl_version = :TLSv1
+    https.ca_file = Puppet.settings[:localcacert]
+    https.key = OpenSSL::PKey::RSA.new(File.read(Puppet.settings[:hostprivkey]))
+    https.cert = OpenSSL::X509::Certificate.new(File.read(Puppet.settings[:hostcert]))
     https.verify_mode = OpenSSL::SSL::VERIFY_PEER
     https
+  end
+
+  def self.make_uri(path, prefix = '/rbac-api/v1')
+    uri = URI.parse("https://#{CONF['server']}:#{CONF['port']}#{prefix}#{path}")
+    Puppet.debug "RBAC: calling URI #{uri.request_uri}"
+    uri
   end
 
   def self.fetch_redirect(uri_str, limit = 10)
     raise ArgumentError, 'HTTP redirection has reached the limit beyond 10' if limit == 0
 
-    uri = URI.parse("#{CONF['rbac_api_url']}#{uri_str}")
+    uri   = make_uri(uri_str, nil)
     https = build_auth(uri)
 
     request = Net::HTTP::Get.new(uri.request_uri)
@@ -42,7 +49,7 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
   end
 
   def self.get_response(endpoint)
-    uri = URI.parse("#{CONF['rbac_api_url']}#{endpoint}")
+    uri   = make_uri(endpoint)
     https = build_auth(uri)
 
     request = Net::HTTP::Get.new(uri.request_uri)
@@ -60,7 +67,7 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
   def self.post_response(endpoint, request_body)
     limit = 10
 
-    uri = URI.parse("#{CONF['rbac_api_url']}#{endpoint}")
+    uri   = make_uri(endpoint)
     https = build_auth(uri)
 
     request = Net::HTTP::Post.new(uri.request_uri)
@@ -78,7 +85,7 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
   end
 
   def self.put_response(endpoint, request_body)
-    uri = URI.parse("#{CONF['rbac_api_url']}#{endpoint}")
+    uri   = make_uri(endpoint)
     https = build_auth(uri)
 
     request = Net::HTTP::Put.new(uri.request_uri)

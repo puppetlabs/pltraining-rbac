@@ -6,8 +6,8 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
   mk_resource_methods
 
   def self.instances
-    Puppet::Provider::Rbac_api::get_response('/rbac-api/v1/users').collect do |user|
-      Puppet.debug "Inspecting user #{user.inspect}"
+    Puppet::Provider::Rbac_api::get_response('/users').collect do |user|
+      Puppet.debug "RBAC: Inspecting user #{user.inspect}"
       new(:ensure       => user['is_revoked'] ? :absent : :present,
           :id           => user['id'],
           :name         => user['login'],
@@ -24,7 +24,7 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
   def self.prefetch(resources)
     vars = instances
     resources.each do |name, res|
-      if provider = vars.find{ |v| v.name == res.title }
+      if provider = vars.find{ |v| v.name == res.name }
         res.provider = provider
       end
     end
@@ -36,7 +36,7 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
 
   def create
     if @property_hash.empty?
-      Puppet.debug "Creating new user #{resource.inspect}"
+      Puppet.debug "RBAC: Creating new user #{resource[:name]}"
 
       [ :display_name, :email ].each do |prop|
         raise ArgumentError, 'name, email, and display_name are required attributes' unless resource[prop]
@@ -48,7 +48,7 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
         'display_name' => resource[:display_name],
         'role_ids'     => normalize_roles(resource[:roles]),
       }
-      Puppet::Provider::Rbac_api::post_response('/rbac-api/v1/users', user)
+      Puppet::Provider::Rbac_api::post_response('/users', user)
 
       if resource[:password]
         set_password(resource[:name], resource[:password])
@@ -56,7 +56,7 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
     else
       # if the user object exists, then it must have been disabled. Let's just re-enable it
       # and provide an opportunity to reset the password
-      Puppet.debug "Re-enabling user #{@property_hash.inspect}"
+      Puppet.debug "RBAC: Re-enabling user #{@property_hash.inspect}"
 
       if @property_hash.has_key? :password
         set_password(@property_hash[:id], @property_hash[:password])
@@ -84,7 +84,7 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
   end
 
   def password=(should)
-    Puppet.debug 'Ignoring password attribute as we do not have the ability to manage it'
+    Puppet.debug 'RBAC: Ignoring password attribute as we do not have the ability to manage it'
   end
 
   def flush
@@ -104,8 +104,8 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
       'is_group'     => false,
     }
 
-    Puppet.debug "Updating user #{user.inspect}"
-    Puppet::Provider::Rbac_api::put_response("/rbac-api/v1/users/#{@property_hash[:id]}", user)
+    Puppet.debug "RBAC: Updating user #{user.inspect}"
+    Puppet::Provider::Rbac_api::put_response("/users/#{@property_hash[:id]}", user)
   end
 
   def normalize_roles(list)
@@ -114,7 +114,7 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
       next item if item.to_i != 0
 
       # lazy load the available roles. Avoid the API call unless needed
-      roles ||= Puppet::Provider::Rbac_api::get_response('/rbac-api/v1/roles')
+      roles ||= Puppet::Provider::Rbac_api::get_response('/roles')
 
       begin
         roles.find {|r| r['display_name'].downcase == item.downcase }['id']
@@ -131,27 +131,27 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
 private
 
   def set_password(id, password)
-    Puppet.debug "Setting password for #{id}"
+    Puppet.debug "RBAC: Setting password for #{id}"
 
     if id.class == String
       begin
-        users = Puppet::Provider::Rbac_api::get_response('/rbac-api/v1/users')
+        users = Puppet::Provider::Rbac_api::get_response('/users')
         id    = users.select { |user| user['login'] == id }.first['id']
        rescue NoMethodError => e
         fail "User #{id} does not exist"
       end
 
-      Puppet.debug "Retrieved user id of #{id}"
+      Puppet.debug "RBAC: Retrieved user id of #{id}"
     end
 
-    token = Puppet::Provider::Rbac_api::post_response("/rbac-api/v1/users/#{id}/password/reset", nil).body
+    token = Puppet::Provider::Rbac_api::post_response("/users/#{id}/password/reset", nil).body
 
     reset = {
       'token'    => token,
       'password' => password,
     }
 
-    Puppet::Provider::Rbac_api::post_response("/rbac-api/v1/auth/reset", reset)
+    Puppet::Provider::Rbac_api::post_response("/auth/reset", reset)
   end
 
 end
