@@ -10,7 +10,7 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
       Puppet.debug "RBAC: Inspecting role #{role.inspect}"
       new(:ensure       => role['is_revoked'] ? :absent : :present,
           :id           => role['id'],
-          :display_name => role['display_name'],
+          :name         => role['display_name'],
           :description  => role['description'],
           :permissions  => role['permissions'],
           :user_ids     => role['user_ids'],
@@ -35,13 +35,13 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
   def create
     Puppet.debug "RBAC: Creating new role #{resource[:name]}"
 
-    [ :display_name, :description ].each do |prop|
-      raise ArgumentError, 'description, and display_name are required attributes' unless resource[prop]
+    [ :name, :description ].each do |prop|
+      raise ArgumentError, 'description, and name are required attributes' unless resource[prop]
     end
 
     role = {
       'description'  => resource[:description],
-      'display_name' => resource[:display_name],
+      'display_name' => resource[:name],
     }
     Puppet::Provider::Rbac_api::post_response('/roles', role)
 
@@ -52,8 +52,8 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
     @property_hash[:ensure] = :absent
   end
 
-  define_method "display_name=" do |value|
-    fail "The display_name parameter cannot be changed after creation."
+  define_method "name=" do |value|
+    fail "The name parameter cannot be changed after creation."
   end
 
   define_method "id=" do |value|
