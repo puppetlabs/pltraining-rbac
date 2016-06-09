@@ -2,21 +2,12 @@ Puppet::Type.newtype(:rbac_role) do
   desc "A Puppet Enterprise Console RBAC role"
   ensurable
 
-  newproperty(:display_name) do
+  newparam(:name) do
     desc 'The displayed name of the role'
-
-    # The API doesn't give us the capability to update these
-    def insync?(is)
-      return true
-    end
   end
 
   newproperty(:description) do
     desc 'The description of the role'
-
-    def insync?(is)
-      return true
-    end
   end
 
   newproperty(:permissions, :array_matching =>:all) do
