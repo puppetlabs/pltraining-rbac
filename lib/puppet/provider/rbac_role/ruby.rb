@@ -42,6 +42,9 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
     role = {
       'description'  => resource[:description],
       'display_name' => resource[:name],
+      'permissions'  => resource[:permissions],
+      'user_ids'     => resource[:user_ids],
+      'group_ids'    => resource[:group_ids],
     }
     Puppet::Provider::Rbac_api::post_response('/roles', role)
 
@@ -49,6 +52,7 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
   end
 
   def destroy
+    Puppet::Provider::Rbac_api::delete_response("/roles/#{@property_hash[:id]}")
     @property_hash[:ensure] = :absent
   end
 
@@ -61,8 +65,9 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
   end
 
   def flush
-    # so, flush gets called, even on create()
+    # so, flush gets called, even on create() and delete()
     return if @property_hash[:id].nil?
+    return if @property_hash[:ensure] == :absent
 
     role = {
       'id'           => @property_hash[:id],
