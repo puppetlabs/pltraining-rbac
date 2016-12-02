@@ -26,7 +26,6 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
 
   def self.make_uri(path, prefix = '/rbac-api/v1')
     uri = URI.parse("https://#{@config['server']}:#{@config['port']}#{prefix}#{path}")
-    Puppet.debug "RBAC: calling URI #{uri.request_uri}"
     uri
   end
 
@@ -35,6 +34,7 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
 
     uri   = make_uri(uri_str, nil)
     https = build_auth(uri)
+    Puppet.debug "RBAC API: REDIRECT #{uri.request_uri}"
 
     request = Net::HTTP::Get.new(uri.request_uri)
     res = https.request(request)
@@ -52,6 +52,8 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
   def self.get_response(endpoint)
     uri   = make_uri(endpoint)
     https = build_auth(uri)
+    Puppet.debug "RBAC API: GET #{uri.request_uri}"
+
 
     request = Net::HTTP::Get.new(uri.request_uri)
     request['Content-Type'] = "application/json"
@@ -65,11 +67,40 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
     res_body
   end
 
-  def self.post_response(endpoint, request_body)
-    limit = 10
-
+  def self.delete_response(endpoint)
     uri   = make_uri(endpoint)
     https = build_auth(uri)
+    Puppet.debug "RBAC API: DELETE #{uri.request_uri}"
+
+    request = Net::HTTP::Delete.new(uri.request_uri)
+    request['Content-Type'] = "application/json"
+    res = https.request(request)
+
+    if res.code != "200"
+      raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.body}"
+    end
+  end
+
+  def self.put_response(endpoint, request_body)
+    uri   = make_uri(endpoint)
+    https = build_auth(uri)
+    Puppet.debug "RBAC API: PUT #{uri.request_uri}"
+
+    request = Net::HTTP::Put.new(uri.request_uri)
+    request['Content-Type'] = "application/json"
+    request.body = request_body.to_json
+    res = https.request(request)
+
+    if res.code != "200"
+      raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.body}"
+    end
+  end
+
+  def self.post_response(endpoint, request_body)
+    limit = 10
+    uri   = make_uri(endpoint)
+    https = build_auth(uri)
+    Puppet.debug "RBAC API: POST #{uri.request_uri}"
 
     request = Net::HTTP::Post.new(uri.request_uri)
     request['Content-Type'] = "application/json"
@@ -82,20 +113,6 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
       fetch_redirect(res['location'], limit - 1)
     else
       raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.to_hash.inspect}"
-    end
-  end
-
-  def self.put_response(endpoint, request_body)
-    uri   = make_uri(endpoint)
-    https = build_auth(uri)
-
-    request = Net::HTTP::Put.new(uri.request_uri)
-    request['Content-Type'] = "application/json"
-    request.body = request_body.to_json
-    res = https.request(request)
-
-    if res.code != "200"
-      raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.body}"
     end
   end
 
