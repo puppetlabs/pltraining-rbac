@@ -10,7 +10,8 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
   confine :exists => CONFIGFILE
 
   # This is autoloaded by the master, so rescue the permission exception.
-  CONF = YAML.load_file(CONFIGFILE) rescue {}
+  @config = YAML.load_file(CONFIGFILE) rescue {}
+  @config = @config.first if @config.class == Array
 
   def self.build_auth(uri)
     https = Net::HTTP.new(uri.host, uri.port)
@@ -24,7 +25,7 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
   end
 
   def self.make_uri(path, prefix = '/rbac-api/v1')
-    uri = URI.parse("https://#{CONF['server']}:#{CONF['port']}#{prefix}#{path}")
+    uri = URI.parse("https://#{@config['server']}:#{@config['port']}#{prefix}#{path}")
     Puppet.debug "RBAC: calling URI #{uri.request_uri}"
     uri
   end
