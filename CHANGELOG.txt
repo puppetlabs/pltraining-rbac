@@ -1,0 +1,3 @@
+v0.0.5
+  * Updated to work with PE 2016.5 classifier.yaml changes
+  * Added rbac_role type
