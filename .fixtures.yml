@@ -1,0 +1,6 @@
+fixtures:
+    symlinks:
+        rbac: "#{source_dir}"
+    forge_modules:
+        inifile: "puppetlabs/inifile"
+        puppet_authorization: "puppetlabs/puppet_authorization"
