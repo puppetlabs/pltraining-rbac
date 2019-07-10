@@ -16,7 +16,13 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
   def self.build_auth(uri)
     https = Net::HTTP.new(uri.host, uri.port)
     https.use_ssl = true
-    https.ssl_version = :TLSv1
+
+    if Puppet::Util::Package.versioncmp(Puppet.version, '6.0')
+      https.ssl_version = :TLSv1_2
+    else
+      https.ssl_version = :TLSv1
+    end
+     
     https.ca_file = Puppet.settings[:localcacert]
     https.key = OpenSSL::PKey::RSA.new(File.read(Puppet.settings[:hostprivkey]))
     https.cert = OpenSSL::X509::Certificate.new(File.read(Puppet.settings[:hostcert]))
