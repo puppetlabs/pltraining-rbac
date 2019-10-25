@@ -6,8 +6,8 @@ Puppet::Type.newtype(:rbac_group) do
     desc 'The name of the group'
   end
 
-  newproperty(:role_ids, :array_matching =>:all) do
-    desc 'Array of role ids for the group'
+  newproperty(:roles, :array_matching =>:all) do
+    desc 'Array of role names for the group'
 
     def insync?(is)
       # The current value may be nil and we don't
