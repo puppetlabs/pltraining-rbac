@@ -4,20 +4,42 @@ Puppet Enterprise 3.7 introduced a new Role Based Access Control layer. This
 enables you to manage the permissions of local users as well as those who are
 created remotely, on a directory service in very granular detail.
 
-This module exposes some of it to the Puppet DSL. Currently, it only manages
-users. Roles, permissions, and groups will be added at a later time.
+This module exposes some of it to the Puppet DSL. Currently, it manages
+users, roles, permissions, and groups.
 
 ## Usage
 
 ``` Puppet
 rbac_user { 'testing account':
-    ensure       => 'present',
-    name         => 'testing',
-    display_name => 'Just a testing account',
-    email        => 'testing@puppetlabs.com',
-    password     => 'puppetlabs',
-    roles        => [ 'Operators' ],
+  ensure       => present,
+  name         => 'testing',
+  display_name => 'Just a testing account',
+  email        => 'testing@puppetlabs.com',
+  password     => 'puppetlabs',
+  roles        => [ 1,2 ],
 }
+
+rbac_role { 'Viewers':
+  ensure      => 'present',
+  description => 'Viewers',
+  permissions => [
+  {
+    'object_type' => 'nodes',
+    'action' => 'view_data',
+    'instance' => '*'
+  },
+  {
+    'object_type' => 'console_page',
+    'action' => 'view',
+    'instance' => '*'
+  }],
+}
+
+rbac_group { 'admins':
+  ensure => 'present',
+  roles  => ['Administrators'],
+}
+
 ```
 
 ## Limitations
