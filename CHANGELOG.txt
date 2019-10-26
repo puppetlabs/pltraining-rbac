@@ -1,3 +1,9 @@
+v0.0.8
+  * Add support for 2019.x by configuring the TLS version used
+
+v0.0.7
+  * Corrected `name` reference for 2017.3.x compatibility
+
 v0.0.6
   * Improve array matching (dylanratcliffe)
 
