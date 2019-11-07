@@ -1,3 +1,6 @@
+v0.0.9
+  * Add support for rbac_group type (LMacchi)
+
 v0.0.8
   * Add support for 2019.x by configuring the TLS version used
 
