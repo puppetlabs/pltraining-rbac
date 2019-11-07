@@ -60,14 +60,11 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
     https = build_auth(uri)
     Puppet.debug "RBAC API: GET #{uri.request_uri}"
 
-
     request = Net::HTTP::Get.new(uri.request_uri)
     request['Content-Type'] = "application/json"
     res = https.request(request)
 
-    if res.code != "200"
-      raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.body}"
-    end
+    raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.body}" unless ['200'].include? res.code
     res_body = JSON.parse(res.body)
 
     res_body
@@ -82,9 +79,7 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
     request['Content-Type'] = "application/json"
     res = https.request(request)
 
-    if res.code != "200"
-      raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.body}"
-    end
+    raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.body}" unless ['200', '204'].include? res.code
   end
 
   def self.put_response(endpoint, request_body)
@@ -97,9 +92,7 @@ class Puppet::Provider::Rbac_api < Puppet::Provider
     request.body = request_body.to_json
     res = https.request(request)
 
-    if res.code != "200"
-      raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.body}"
-    end
+    raise Puppet::Error, "An RBAC API error occured: HTTP #{res.code}, #{res.body}" unless ['200'].include? res.code
   end
 
   def self.post_response(endpoint, request_body)
