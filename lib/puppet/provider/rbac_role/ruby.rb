@@ -67,7 +67,7 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
   def normalize_users(list)
     users = nil
     list.collect! do |item|
-      next item if item.to_i != 0
+      next item if item =~ /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
 
       # lazy load the available users. Avoid the API call unless needed
       users ||= Puppet::Provider::Rbac_api::get_response('/users')
