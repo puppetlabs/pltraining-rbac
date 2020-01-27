@@ -38,7 +38,7 @@ Puppet::Type.newtype(:rbac_role) do
       # The current value may be nil and we don't
       # want to call sort on it so make sure we have arrays
       if is.is_a?(Array) and @should.is_a?(Array)
-        is.sort == @should.sort
+        is.sort == provider.normalize_users(@should).sort
       else
         is == @should
       end
