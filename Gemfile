@@ -20,6 +20,7 @@ group :development, :unit_tests do
   gem 'puppetlabs_spec_helper',    :require => false
   gem 'rspec-puppet', '>= 2.3.2',  :require => false
   gem 'simplecov',                 :require => false
+  gem 'puppet-strings',            :require => false
 end
 group :system_tests do
   gem 'inifile'

@@ -109,6 +109,7 @@ Puppet::Type.type(:rbac_user).provide(:ruby, :parent => Puppet::Provider::Rbac_a
   end
 
   def normalize_roles(list)
+    return list unless list.is_a? Array
     roles = nil
     list.collect! do |item|
       next item if item.to_i != 0

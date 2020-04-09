@@ -43,7 +43,7 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
       'description'  => resource[:description],
       'display_name' => resource[:name],
       'permissions'  => resource[:permissions],
-      'user_ids'     => resource[:user_ids],
+      'user_ids'     => normalize_users(resource[:user_ids]),
       'group_ids'    => resource[:group_ids],
     }
     Puppet::Provider::Rbac_api::post_response('/roles', role)
@@ -64,6 +64,23 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
     fail "The id parameter is read-only."
   end
 
+  def normalize_users(list)
+    return list unless list.is_a? Array
+    users = nil
+    list.collect! do |item|
+      next item if item =~ /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
+
+      # lazy load the available users. Avoid the API call unless needed
+      users ||= Puppet::Provider::Rbac_api::get_response('/users')
+
+      begin
+        users.find {|r| r['display_name'].downcase == item.downcase }['id']
+      rescue NoMethodError => e
+        fail "User #{item} does not exist"
+      end
+    end
+  end
+
   def flush
     # so, flush gets called, even on create() and delete()
     return if @property_hash[:id].nil?
@@ -74,7 +91,7 @@ Puppet::Type.type(:rbac_role).provide(:ruby, :parent => Puppet::Provider::Rbac_a
       'description'  => @property_hash[:description],
       'display_name' => @property_hash[:name],
       'permissions'  => @property_hash[:permissions],
-      'user_ids'     => @property_hash[:user_ids],
+      'user_ids'     => normalize_users(@property_hash[:user_ids]),
       'group_ids'    => @property_hash[:group_ids],
     }
 

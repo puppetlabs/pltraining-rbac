@@ -32,13 +32,13 @@ Puppet::Type.newtype(:rbac_role) do
   end
 
   newproperty(:user_ids, :array_matching =>:all) do
-    desc 'Array of UUIDs of users assigned to the role'
+    desc 'Array of UUIDs of users (or names) assigned to the role'
 
     def insync?(is)
       # The current value may be nil and we don't
       # want to call sort on it so make sure we have arrays
       if is.is_a?(Array) and @should.is_a?(Array)
-        is.sort == @should.sort
+        is.sort == provider.normalize_users(@should).sort
       else
         is == @should
       end
