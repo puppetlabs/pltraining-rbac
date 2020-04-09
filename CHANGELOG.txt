@@ -1,3 +1,6 @@
+v0.0.10
+  * Add support for user names instead of just UUIDs (dylanratcliffe)
+
 v0.0.9
   * Add support for rbac_group type (LMacchi)
 
