@@ -53,7 +53,7 @@ revoke the account, or update the roles attached to the user. When you ensure an
 `rbac_user` is absent, the record will not be removed, just marked as revoked.
 
 For a node that is not a standalone master to manage RBAC users, its certname
-must be listed in the Console node's RBAC certificate whitelist.
+must be listed in the Console node's RBAC certificate allowlist.
 
 Contact
 -------
